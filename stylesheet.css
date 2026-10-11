@@ -23,6 +23,13 @@ h2 {
     border-bottom: 2px solid #D5D0C4;
 }
 
+h3 {
+    margin: 0;
+    font-size: 18px;
+    font-family: 'Times New Roman', Times, serif;
+    color: #4b5142;
+}
+
 p, ul {
     margin: 0;
     font-size: 16px;
