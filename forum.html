@@ -15,56 +15,186 @@
         <p>
             Asynchronous discussion between members of Team Lane Management Systems 1. Threads are
             listed newest first. Each thread covers one topic and carries a status so that open
-            questions are easy to find. No threads have been posted yet.
+            questions are easy to find. Post directly on this page, no setup required.
         </p>
     </div>
 
     <div class="section">
-        <h2>How to Post</h2>
-        <ol>
-            <li>Open <code>forum.html</code> in your local clone of the repository.</li>
-            <li>Copy the template at the bottom of this file's source, marked
-                <code>THREAD TEMPLATE</code>, and paste it directly below the
-                <code>NEW THREADS GO HERE</code> marker so the newest thread appears first.</li>
-            <li>Fill in the title, your name and role, the date, the status, and the body of the post.</li>
-            <li>To reply to an existing thread, add an <code>&lt;li class="reply"&gt;</code> entry to
-                that thread's reply list rather than starting a new thread.</li>
-            <li>Update the thread's status when it changes, so open questions stay easy to spot.</li>
-            <li>Commit with a message naming the thread, then push.</li>
-        </ol>
-        <h3>Thread statuses</h3>
-        <ul>
-            <li><span class="status status-open">Open</span> awaiting discussion or a decision</li>
-            <li><span class="status status-customer">Customer</span> blocked pending an answer from the customer</li>
-            <li><span class="status status-resolved">Resolved</span> decided, kept for the record</li>
-        </ul>
+        <h2>Start a New Thread</h2>
+        <form id="new-thread-form">
+            <p>
+                <label for="t-author">Your name</label>
+                <input type="text" id="t-author" required maxlength="60">
+            </p>
+            <p>
+                <label for="t-title">Title</label>
+                <input type="text" id="t-title" required maxlength="140">
+            </p>
+            <p>
+                <label for="t-status">Status</label>
+                <select id="t-status">
+                    <option value="open">Open, awaiting discussion or a decision</option>
+                    <option value="customer">Customer, blocked pending an answer from the customer</option>
+                    <option value="resolved">Resolved, decided and kept for the record</option>
+                </select>
+            </p>
+            <p>
+                <label for="t-body">Post</label>
+                <textarea id="t-body" rows="5" required maxlength="4000"></textarea>
+            </p>
+            <p>
+                <button type="submit" id="t-submit">Post Thread</button>
+                <span class="form-msg" id="t-msg"></span>
+            </p>
+        </form>
     </div>
 
-    <!-- NEW THREADS GO HERE -->
-
-    <!--
-    THREAD TEMPLATE
-    Copy the block below, paste it under the "NEW THREADS GO HERE" marker, and fill it in.
-    Increment the id. Use one of: status-open, status-customer, status-resolved.
-
-    <div class="section thread" id="thread-XXX">
-        <h2>Thread title here</h2>
-        <p class="meta">
-            Your Name, Your Role &middot; MM/DD/2026 &middot;
-            <span class="status status-open">Open</span>
-        </p>
-        <p>
-            Body of the post.
-        </p>
-        <h3>Replies</h3>
-        <ul class="replies">
-            <li class="reply">
-                <span class="meta">Replier Name &middot; MM/DD/2026</span>
-                <p>Reply text.</p>
-            </li>
-        </ul>
+    <div id="threads">
+        <div class="section">
+            <p class="form-msg">Loading threads...</p>
+        </div>
     </div>
-    -->
+
+    <script type="module">
+      import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+
+      // ---- Supabase project config. The publishable key is safe in public code. ----
+      const SUPABASE_URL = "https://qcgjwwkryscfcryeksmw.supabase.co";
+      const SUPABASE_KEY = "sb_publishable_uWXHLeP5WUNi8G_cRZb0fw_0117AR8a";
+      // ---------------------------------------------------------------------------
+
+      const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      const STATUS_LABEL = {
+        open: "Open",
+        customer: "Customer",
+        resolved: "Resolved",
+      };
+
+      // Escape user input before putting it in the page, so a post
+      // containing HTML is shown as text rather than rendered.
+      function esc(s) {
+        return String(s ?? "").replace(/[&<>"']/g, function (c) {
+          return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+        });
+      }
+
+      function fmtDate(iso) {
+        const d = new Date(iso);
+        return d.toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "numeric" }) +
+               " " + d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+      }
+
+      function replyHTML(r) {
+        return '<li class="reply">' +
+                 '<span class="meta">' + esc(r.author) + ' &middot; ' + fmtDate(r.created_at) + '</span>' +
+                 '<p>' + esc(r.body) + '</p>' +
+               '</li>';
+      }
+
+      function threadHTML(t) {
+        const replies = (t.replies || []).sort(function (a, b) {
+          return new Date(a.created_at) - new Date(b.created_at);
+        });
+        const status = STATUS_LABEL[t.status] || "Open";
+        return '<div class="section thread">' +
+                 '<h2>' + esc(t.title) + '</h2>' +
+                 '<p class="meta">' + esc(t.author) + ' &middot; ' + fmtDate(t.created_at) + ' &middot; ' +
+                   '<span class="status status-' + esc(t.status) + '">' + status + '</span>' +
+                 '</p>' +
+                 '<p>' + esc(t.body).replace(/\n/g, "<br>") + '</p>' +
+                 '<h3>Replies</h3>' +
+                 '<ul class="replies">' +
+                   (replies.length ? replies.map(replyHTML).join("") :
+                     '<li class="reply"><span class="meta">No replies yet.</span></li>') +
+                 '</ul>' +
+                 '<form class="reply-form" data-thread="' + t.id + '">' +
+                   '<p>' +
+                     '<label>Your name</label>' +
+                     '<input type="text" class="r-author" required maxlength="60">' +
+                   '</p>' +
+                   '<p>' +
+                     '<label>Reply</label>' +
+                     '<textarea class="r-body" rows="3" required maxlength="4000"></textarea>' +
+                   '</p>' +
+                   '<p>' +
+                     '<button type="submit">Post Reply</button>' +
+                     '<span class="form-msg r-msg"></span>' +
+                   '</p>' +
+                 '</form>' +
+               '</div>';
+      }
+
+      async function loadThreads() {
+        const box = document.getElementById("threads");
+        const { data, error } = await db
+          .from("threads")
+          .select("id, title, author, status, body, created_at, replies(id, author, body, created_at)")
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          box.innerHTML = '<div class="section"><p class="form-msg">' +
+            'Could not load threads: ' + esc(error.message) + '</p></div>';
+          return;
+        }
+        if (!data.length) {
+          box.innerHTML = '<div class="section"><p class="form-msg">' +
+            'No threads have been posted yet.</p></div>';
+          return;
+        }
+        box.innerHTML = data.map(threadHTML).join("");
+      }
+
+      document.getElementById("new-thread-form").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const btn = document.getElementById("t-submit");
+        const msg = document.getElementById("t-msg");
+        btn.disabled = true;
+        msg.textContent = "Posting...";
+
+        const { error } = await db.from("threads").insert({
+          author: document.getElementById("t-author").value.trim(),
+          title: document.getElementById("t-title").value.trim(),
+          status: document.getElementById("t-status").value,
+          body: document.getElementById("t-body").value.trim(),
+        });
+
+        btn.disabled = false;
+        if (error) {
+          msg.textContent = "Could not post: " + error.message;
+          return;
+        }
+        msg.textContent = "";
+        document.getElementById("t-title").value = "";
+        document.getElementById("t-body").value = "";
+        await loadThreads();
+      });
+
+      document.getElementById("threads").addEventListener("submit", async function (e) {
+        if (!e.target.classList.contains("reply-form")) return;
+        e.preventDefault();
+        const form = e.target;
+        const btn = form.querySelector("button");
+        const msg = form.querySelector(".r-msg");
+        btn.disabled = true;
+        msg.textContent = "Posting...";
+
+        const { error } = await db.from("replies").insert({
+          thread_id: form.dataset.thread,
+          author: form.querySelector(".r-author").value.trim(),
+          body: form.querySelector(".r-body").value.trim(),
+        });
+
+        btn.disabled = false;
+        if (error) {
+          msg.textContent = "Could not post: " + error.message;
+          return;
+        }
+        await loadThreads();
+      });
+
+      loadThreads();
+    </script>
 
 </body>
 
