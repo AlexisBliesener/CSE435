@@ -73,3 +73,82 @@ body {
 
 
 
+
+/* ---- Prototype placeholder ---- */
+
+.pending {
+    color: #6B6F62;
+    font-style: italic;
+}
+
+/* ---- Discussion forum ---- */
+
+ol {
+    margin: 0;
+    font-size: 16px;
+    font-family: 'Times New Roman', Times, serif;
+    color: #45483E;
+    line-height: 1.8;
+}
+
+code {
+    background-color: #EAE2D6;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 14px;
+}
+
+.thread h2 {
+    margin-bottom: 8px;
+}
+
+.thread h3 {
+    margin-top: 18px;
+    margin-bottom: 6px;
+}
+
+.meta {
+    font-size: 14px;
+    color: #6B6F62;
+}
+
+.thread > .meta {
+    margin-bottom: 12px;
+}
+
+.status {
+    padding: 2px 9px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-family: 'Times New Roman', Times, serif;
+}
+
+.status-open {
+    background-color: #D9E0C6;
+    color: #3F4A2C;
+}
+
+.status-customer {
+    background-color: #EFE0C3;
+    color: #6B5426;
+}
+
+.status-resolved {
+    background-color: #DED9D0;
+    color: #5A564E;
+}
+
+.replies {
+    list-style: none;
+    padding-left: 0;
+}
+
+.reply {
+    border-left: 3px solid #D5D0C4;
+    padding: 4px 0 4px 14px;
+    margin-bottom: 10px;
+}
+
+.reply p {
+    margin: 2px 0 0 0;
+}

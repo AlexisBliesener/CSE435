@@ -1,58 +1,101 @@
 <html>
-<head>
-  <meta charset="UTF-8">
-  <title> Course Project Website</title>
-  <link rel="stylesheet" href="stylesheet.css">
-</head>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Course Project Website</title>
+    <link rel="stylesheet" href="stylesheet.css" />
+  </head>
 
-<body>
-  <div class="header">
-    <h1>CSE 435: Team Lane Management Systems 1</h1>
-  </div>
+  <body>
+    <div class="header">
+      <h1>CSE 435: Team Lane Management Systems 1</h1>
+    </div>
 
-  <div class="section">
-    <h2>
-      Project Background: 
-    </h2>
+    <div class="section">
+      <h2>Project Background:</h2>
 
-    <p>
-      A key component of being a driver is being able to acknowledge differences in lanes and their purposes on the highway or public roads. 
-      However, not every environment that a driver will usually be in makes it easy to identify lane markings on the road. 
-      The implementation of a Lane Management System addresses safer driving by detecting lanes and properly adhering to road rules through lane detection. 
-      As the automotive industry continues to evolve, new features are being created to ensure safety and security for future 
-      drivers which allows for the expansion of Lane Management systems.
-    </p>
-  </div>
+      <p>
+        A key component of being a driver is being able to acknowledge
+        differences in lanes and their purposes on the highway or public roads.
+        However, not every environment that a driver will usually be in makes it
+        easy to identify lane markings on the road. The implementation of a Lane
+        Management System addresses safer driving by detecting lanes and
+        properly adhering to road rules through lane detection. As the
+        automotive industry continues to evolve, new features are being created
+        to ensure safety and security for future drivers which allows for the
+        expansion of Lane Management systems.
+      </p>
+    </div>
 
-  <div class="section">
-    <h2>
-      Links
-    </h2>
-    <h3>
-      Course
-    </h3>
-    <ul>
-      <li><a href="https://www.cse.msu.edu/~chengb/">Instructor</a></li>
-      <li><a href="https://www.cse.msu.edu/~cse435/">Course Page</a></li>
-    </ul>
-    <h3>
-      Project
-    </h3>
-    <ul>
-      <li><a href="assets/2026-LMS-GM-Agrawal.pdf">Project Description</a></li>
-    </ul>
-  </div>
-  
-  <div class="section">
-    <h2>Resources used for Domain Research</h2>
-    <ul>
-      <li><a href="https://www.mycardoeswhat.org/safety-features/lane-keeping-assist/">MyCarDoesWhat? Lane Keeping Assist</a></li>
-      <li><a href="https://www.mycardoeswhat.org/safety-features/lane-departure-warning/">MyCarDoesWhat? Lane Departure Warning</a></li>
-      <li><a href="https://www.bosch-mobility.com/en/solutions/assistance-systems/lane-centering-assist/">Bosch Lane Centering Assist</a></li>
-      <li><a href="https://www.capitalone.com/cars/learn/finding-the-right-car/lanecentering-assist-explained/3838">Capital One Lane-Centering Assist Explained</a></li>
-    </ul>
-  </div>
-  
-</body>
+    <div class="section">
+      <h2>Project Description:</h2>
 
+      <p>
+        The Lane Management System (LMS) is a driver assistance system that
+        determines which lane a vehicle is in and where the vehicle sits within
+        the lane, as well as the drivers future position in order to act to keep
+        the driver in their lane. This project has three main features: a Lane
+        Departure Warning System that alerts the driver if their vehicle begins
+        to drift out of the lane, a Lane Keeping System that steers to correct a
+        lane departure that was unintended, and a Lane Centering System that
+        helps position the vehicle properly within the lane.
+      </p>
+
+      <p>
+        The system has cameras for lane marker detetcing and vehicle sensors for
+        speed, steering angles, and road curvature, which helps to predict the
+        vehicles path and flag issues. A supervisory controller decides when
+        each feature is active because they all only operate when certain
+        thresholds are met. A large design challenge is drivers authority: when
+        should the system take control from the driver, how and when can the
+        driver override it, and how does the system behave when markings are
+        unclear.
+      </p>
+    </div>
+
+    <div class="section">
+      <h2>Links</h2>
+      <h3>Course</h3>
+      <ul>
+        <li><a href="https://www.cse.msu.edu/~chengb/">Instructor</a></li>
+        <li><a href="https://www.cse.msu.edu/~cse435/">Course Page</a></li>
+      </ul>
+      <h3>Project</h3>
+      <ul>
+        <li>
+          <a href="assets/2026-LMS-GM-Agrawal.pdf">Project Description</a>
+        </li>
+        <li><a href="prototype.html">Prototype</a></li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>Resources used for Domain Research</h2>
+      <ul>
+        <li>
+          <a
+            href="https://www.mycardoeswhat.org/safety-features/lane-keeping-assist/"
+            >MyCarDoesWhat? Lane Keeping Assist</a
+          >
+        </li>
+        <li>
+          <a
+            href="https://www.mycardoeswhat.org/safety-features/lane-departure-warning/"
+            >MyCarDoesWhat? Lane Departure Warning</a
+          >
+        </li>
+        <li>
+          <a
+            href="https://www.bosch-mobility.com/en/solutions/assistance-systems/lane-centering-assist/"
+            >Bosch Lane Centering Assist</a
+          >
+        </li>
+        <li>
+          <a
+            href="https://www.capitalone.com/cars/learn/finding-the-right-car/lanecentering-assist-explained/3838"
+            >Capital One Lane-Centering Assist Explained</a
+          >
+        </li>
+      </ul>
+    </div>
+  </body>
 </html>
