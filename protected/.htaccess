@@ -1,0 +1,4 @@
+AuthType Basic 
+AuthName "Restricted Area" 
+AuthUserFile /egr/courses/unix/CSE/435/web/2026/lms1/protected/.htpasswd 
+Require valid-user 

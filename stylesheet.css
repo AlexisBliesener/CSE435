@@ -152,3 +152,65 @@ code {
 .reply p {
     margin: 2px 0 0 0;
 }
+
+/* ---- Forum post forms ---- */
+
+label {
+    display: block;
+    font-size: 15px;
+    font-family: 'Times New Roman', Times, serif;
+    color: #4b5142;
+    margin-bottom: 4px;
+}
+
+input[type="text"],
+textarea,
+select {
+    width: 100%;
+    max-width: 640px;
+    box-sizing: border-box;
+    padding: 7px 9px;
+    font-size: 15px;
+    font-family: 'Times New Roman', Times, serif;
+    color: #45483E;
+    background-color: #FFFDFA;
+    border: 1px solid #D5D0C4;
+    border-radius: 4px;
+}
+
+textarea {
+    resize: vertical;
+}
+
+button {
+    padding: 7px 18px;
+    font-size: 15px;
+    font-family: 'Times New Roman', Times, serif;
+    color: #F7F2EB;
+    background-color: #52663B;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #414B32;
+}
+
+button:disabled {
+    background-color: #A3AD93;
+    cursor: default;
+}
+
+.form-msg {
+    margin-left: 12px;
+    font-size: 14px;
+    font-style: italic;
+    color: #6B6F62;
+}
+
+.reply-form {
+    border-top: 1px solid #E0D9CE;
+    margin-top: 18px;
+    padding-top: 14px;
+}
