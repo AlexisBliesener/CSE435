@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lane Management Simulator 3D</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+
+<style>[hidden]{display:none!important}body{margin:0}</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Lane Management Simulator</h1>
+      <p>Prototype v2 of the Lane Management System from the SRS. Switch between the driver's seat and an overhead view, change the road, traffic and weather, and run the customer scenarios or drive yourself.</p>
+    </div>
+    <div class="top-actions">
+      <button class="btn" id="btnSound" aria-pressed="true">Sound on</button>
+    </div>
+  </header>
+
+  <section class="main">
+    <div class="simcol">
+      <div class="viewport" id="viewport">
+        <canvas id="scene" aria-label="3D view of the car and road"></canvas>
+        <div class="hud hud-tl">
+          <button class="drvbtn" id="btnTake" aria-pressed="false"><span class="dot"></span><span id="takeLbl">Automatic driver</span><b id="takeAct">Take control</b></button>
+          <div class="chips" id="envChips"></div>
+        </div>
+        <div class="hud hud-tr">
+          <div class="viewseg" role="group" aria-label="Camera view" id="viewSeg">
+            <button data-view="fpv" id="vFpv">First person</button>
+            <button data-view="overhead" id="vTop">Overhead</button>
+            <button data-view="chase" id="vChase">Chase</button>
+          </div>
+        </div>
+        <div class="hud hud-bl" id="keyHint">T take control · V view · Space pause</div>
+        <div class="hud hud-br">
+          <button class="btn sm ghost" id="btnOverlay" aria-pressed="true">LMS overlay</button>
+        </div>
+        <div class="legend-ov" id="ovLegend">
+          <span><i class="sw sw-det"></i>Detected lane</span>
+          <span><i class="sw sw-ctr"></i>Lane center</span>
+          <span><i class="sw sw-pred"></i>Predicted path</span>
+          <span><i class="sw sw-fov"></i>Camera view</span>
+        </div>
+        <div class="cockpit" id="cockpit" aria-hidden="true">
+          <div class="ck-hud" id="ckHud"><b id="ckHudT"></b><span id="ckHudS"></span></div>
+          <div class="ck-wheel" id="ckWheelBox">
+            <svg viewBox="-100 -100 200 200">
+              <defs><linearGradient id="ckRimG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a555e"/><stop offset=".5" stop-color="#262e34"/><stop offset="1" stop-color="#141a1e"/></linearGradient></defs>
+              <g id="ckWheel">
+                <circle id="ckRing" r="94" fill="none" stroke-width="4" opacity="0"/>
+                <circle r="84" fill="none" stroke="url(#ckRimG)" stroke-width="15"/>
+                <path d="M-79 -7 L-28 -13 L-28 15 L-77 11 Z" fill="#20272c"/>
+                <path d="M79 -7 L28 -13 L28 15 L77 11 Z" fill="#20272c"/>
+                <path d="M-15 22 L-9 77 L9 77 L15 22 Z" fill="#20272c"/>
+                <circle r="30" fill="#262e34" stroke="#36414a" stroke-width="2"/>
+                <text id="ckHub" y="6" text-anchor="middle">LMS</text>
+                <rect x="-5" y="-98" width="10" height="13" rx="2" fill="#F5B642"/>
+              </g>
+            </svg>
+          </div>
+          <div class="ck-mini">
+            <span class="ck-sig" id="ckSigL"><svg viewBox="0 0 24 24"><path d="M2 12l9-8v5h11v6H11v5z"/></svg></span>
+            <div class="ck-spd"><b id="ckSpeed">0</b><small>MPH</small><em id="ckState">LMS OFF</em></div>
+            <span class="ck-sig" id="ckSigR"><svg viewBox="0 0 24 24"><path d="M22 12l-9-8v5H2v6h11v5z"/></svg></span>
+          </div>
+          <div class="ck-screen">
+            <div class="cs-head"><span>Lane Management</span><span class="cs-chip" id="csChip">OFF</span></div>
+            <div class="cs-body">
+              <svg class="cs-lane" viewBox="0 0 100 80">
+                <path d="M14 80 L42 2 L58 2 L86 80 Z" fill="#1b2328"/>
+                <path id="csL" d="M24 80 L45 2" fill="none" stroke-width="2.6"/>
+                <path id="csR" d="M76 80 L55 2" fill="none" stroke-width="2.6"/>
+                <path id="csP" d="M50 58 L50 20" fill="none" stroke="#74A7FF" stroke-width="1.6" stroke-dasharray="3 3"/>
+                <g id="csCar"><rect x="-8" y="56" width="16" height="22" rx="4" fill="#74A7FF"/><rect x="-6" y="61" width="12" height="6" rx="1.5" fill="#0e1317"/></g>
+              </svg>
+              <div class="cs-side">
+                <div class="cs-lamps"><span id="csLdw">LDWS</span><span id="csLks">LKS</span><span id="csLcs">LCS</span></div>
+                <div class="cs-msg" id="csMsg">No alerts</div>
+              </div>
+            </div>
+            <div class="cs-foot">
+              <span class="cs-ic" id="csWv" title="Wheel vibration"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="17"/><circle cx="24" cy="24" r="4"/><path d="M7 24h13M28 24h13M24 28v13"/></svg></span>
+              <span class="cs-ic" id="csSeat" title="Seat vibration"><svg viewBox="0 0 48 48"><path d="M16 6c-2 0-3 1-3 3l3 20h14l3 4v7H14v-7M30 29l-2-22c0-1-1-1-2-1h-10"/></svg></span>
+              <span class="cs-ic" id="csSpk" title="Beep"><svg viewBox="0 0 48 48"><path d="M8 18h8l10-8v28l-10-8H8z"/><path d="M32 17c3 4 3 10 0 14M37 12c6 7 6 17 0 24"/></svg></span>
+              <span class="cs-q">Lane <b id="csLaneNo">2</b> · Image <b id="csQ">97</b></span>
+            </div>
+          </div>
+        </div>
+        <div class="flash" id="flash"></div>
+        <div class="badge-paused" id="pausedBadge" hidden>Paused</div>
+        <div class="vp-prompt" id="vpPrompt" hidden><b id="vpPromptH">Your turn</b><span id="vpPromptT"></span></div>
+        <div class="nogl" id="noGl" hidden>
+          <b>3D view unavailable</b>
+          <span>This browser could not start WebGL. The simulation and dashboard still run.</span>
+        </div>
+      </div>
+
+      <div class="cluster" id="cluster" aria-live="polite">
+        <div class="cl-speed">
+          <div class="spdnum"><span id="spdNum">0</span><small>MPH</small></div>
+          <div class="spdbar"><div class="band" id="spdBand"></div><div class="needle" id="spdNeedle"></div></div>
+          <div class="lbl" id="spdLbl">LMS works above 35 and below 85 mph</div>
+        </div>
+        <div class="cl-state">
+          <div class="cl-head"><span class="cl-title">LMS</span><span class="chip off" id="stateChip">OFF</span></div>
+          <div class="cl-sub" id="stateSub">Driver in control</div>
+          <div class="subs">
+            <div class="sys" id="sysLdw"><b>LDWS</b><span>OFF</span></div>
+            <div class="sys" id="sysLks"><b>LKS</b><span>OFF</span></div>
+            <div class="sys" id="sysLcs"><b>LCS</b><span>OFF</span></div>
+          </div>
+        </div>
+        <div class="cl-mid">
+          <div class="notices" id="notices"></div>
+          <div class="meters">
+            <div>
+              <div class="mhead"><span>Lane <b id="laneNo">2</b></span><span id="posTxt">Center</span></div>
+              <div class="posbar"><i id="edgeL"></i><i id="edgeR"></i><i class="zero"></i><b class="car" id="posCar"></b><u class="pred" id="posPred"></u></div>
+              <div class="btypes"><span id="bL">dashed</span><span id="bR">road edge</span></div>
+            </div>
+            <div>
+              <div class="mhead"><span>Image quality</span><span id="qTxt">97 / 100</span></div>
+              <div class="qbar"><div class="fill" id="qFill"></div><div class="tick" id="qTick"></div></div>
+              <div class="btypes"><span id="capTxt">Capture every 100 ms</span><span id="occTxt"></span></div>
+            </div>
+          </div>
+        </div>
+        <div class="cl-icons">
+          <div class="ic" id="icWheel"><svg viewBox="0 0 48 48" aria-hidden="true"><g id="wheelG"><circle cx="24" cy="24" r="18"/><circle cx="24" cy="24" r="4"/><path d="M6 24h14M28 24h14M24 28v14"/></g></svg><span>Wheel</span></div>
+          <div class="ic" id="icSeat"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M16 6c-2 0-3 1-3 3l3 20h14l3 4v7H14v-7M30 29l-2-22c0-1-1-1-2-1h-10"/></svg><span>Seat</span></div>
+          <div class="ic" id="icSpk"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 18h8l10-8v28l-10-8H8z"/><path d="M32 17c3 4 3 10 0 14M37 12c6 7 6 17 0 24"/></svg><span id="spkTxt">Speaker</span></div>
+          <div class="ic sig" id="icL"><svg viewBox="0 0 48 48" aria-hidden="true"><path class="arrow" d="M6 24l18-14v9h18v10H24v9z"/></svg><span>Left</span></div>
+          <div class="ic sig" id="icR"><svg viewBox="0 0 48 48" aria-hidden="true"><path class="arrow" d="M42 24L24 10v9H6v10h18v9z"/></svg><span>Right</span></div>
+          <div class="ctrl-line">
+            <span>Steering <b id="auth">Driver</b></span>
+            <span>Driver torque <b id="torq">0.0 Nm</b></span>
+            <span>LMS command <b id="cmdTxt">0.0°</b></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="panel card">
+      <div class="tabs" role="tablist" id="panelTabs">
+        <button role="tab" id="tabScn" aria-selected="true" aria-controls="paneScn">Scenarios</button>
+        <button role="tab" id="tabEnv" aria-selected="false" aria-controls="paneEnv">Road and weather</button>
+        <button role="tab" id="tabDrv" aria-selected="false" aria-controls="paneDrv">Driver</button>
+        <button role="tab" id="tabFlt" aria-selected="false" aria-controls="paneFlt">Faults</button>
+      </div>
+
+      <div class="pane" id="paneScn" role="tabpanel" aria-labelledby="tabScn">
+        <div class="scgrid" id="scList"></div>
+        <h3 id="scTitle"></h3>
+        <p class="sc-sum" id="scSum"></p>
+        <div class="drvmode">
+          <span class="drv-lbl">Who drives</span>
+          <div class="seg big" id="segDriver"><button data-v="auto">Automatic driver</button><button data-v="self">Self drive</button></div>
+          <p class="note" id="drvNote"></p>
+        </div>
+        <div class="runbar">
+          <button class="btn primary" id="btnPlay">Pause</button>
+          <button class="btn" id="btnNext">Next step</button>
+          <button class="btn" id="btnRestart">Restart</button>
+          <label class="inline" for="ctlMul">Speed
+            <select id="ctlMul"><option value="1">1x</option><option value="2">2x</option><option value="4">4x</option></select>
+          </label>
+          <span class="clock" id="clock">0:00.0</span>
+        </div>
+        <div class="runcount" id="runCount"></div>
+        <ol class="steps" id="steps"></ol>
+      </div>
+
+      <div class="pane" id="paneEnv" role="tabpanel" aria-labelledby="tabEnv" hidden>
+        <div class="fld"><label for="ctlRoad">Road</label>
+          <select id="ctlRoad"></select></div>
+        <div class="fld"><span>Traffic</span>
+          <div class="seg" id="segTraffic"><button data-v="none">None</button><button data-v="light">Light</button><button data-v="heavy">Heavy</button></div></div>
+        <button class="btn" id="btnCutIn">Car cuts in ahead</button>
+        <div class="fld"><span>Weather</span>
+          <div class="seg" id="segWeather"><button data-v="clear">Clear</button><button data-v="rain">Rain</button><button data-v="fog">Fog</button><button data-v="snow">Snow</button></div></div>
+        <div class="fld"><div class="row1"><label for="ctlInt">Weather intensity</label><output id="oInt"></output></div><input type="range" id="ctlInt" min="0" max="1" step="0.05"></div>
+        <div class="two">
+          <div class="fld"><span>Light</span>
+            <div class="seg" id="segNight"><button data-v="0">Day</button><button data-v="1">Night</button></div></div>
+          <div class="fld"><span>Wind</span>
+            <div class="seg" id="segWind"><button data-v="0">Calm</button><button data-v="1">Gusty</button></div></div>
+        </div>
+        <div class="fld"><label for="ctlMarks">Lane markings</label>
+          <select id="ctlMarks"><option value="clear">Clear</option><option value="faded">Faded</option><option value="obscured">Obscured</option><option value="complex">Overly complicated</option><option value="none">None</option></select></div>
+        <div class="fld"><div class="row1"><label for="ctlWidth">Lane width</label><output id="oWidth"></output></div><input type="range" id="ctlWidth" min="2.4" max="4.8" step="0.1"></div>
+        <div class="fld"><div class="row1"><label for="ctlCurv">Road curvature ahead</label><output id="oCurv"></output></div><input type="range" id="ctlCurv" min="-0.008" max="0.008" step="0.0005"></div>
+        <p class="note">Curvature changes start about 70 m ahead of the car. LMS needs lanes between 2.8 and 4.3 m wide.</p>
+      </div>
+
+      <div class="pane" id="paneDrv" role="tabpanel" aria-labelledby="tabDrv" hidden>
+        <div class="fld setting">
+          <div class="row1"><label for="ctlResume">Re-enable LMS after an override</label><output id="oResume">3.0 s</output></div>
+          <input type="range" id="ctlResume" min="1" max="10" step="0.5" value="3">
+          <span class="note">After the driver stops steering hard, LMS waits this long, then turns back on in whatever lane the car is in.</span>
+        </div>
+        <div class="lockmsg" id="drvLock"><span>The automatic driver is in control. Take control to use these.</span><button class="btn sm primary" id="btnTake2">Take control</button></div>
+        <button class="btn primary wide" id="btnLms">Enable LMS</button>
+        <div class="fld"><div class="row1"><label for="ctlSpeed">Target speed</label><output id="oSpeed"></output></div><input type="range" id="ctlSpeed" min="0" max="100" step="1"></div>
+        <div class="fld"><div class="row1"><label for="ctlSteer">Steering input</label><output id="oSteer"></output></div><input type="range" id="ctlSteer" min="-100" max="100" step="5"></div>
+        <div class="fld"><span>Turn signal</span>
+          <div class="seg" id="segSig"><button data-v="-1">Left</button><button data-v="0">Off</button><button data-v="1">Right</button></div></div>
+        <div class="two">
+          <button class="btn" id="btnLaneL">Change lane left</button>
+          <button class="btn" id="btnLaneR">Change lane right</button>
+        </div>
+        <div class="fld"><span>Driver attention</span>
+          <div class="seg" id="segAttn"><button data-v="attentive">Attentive</button><button data-v="distracted">Distracted</button></div></div>
+        <div class="fld"><span>Drift direction when distracted</span>
+          <div class="seg" id="segDrift"><button data-v="-1">Left</button><button data-v="1">Right</button></div></div>
+        <table class="keys">
+          <caption>Keyboard</caption>
+          <tbody>
+            <tr><td><kbd>W</kbd> <kbd>S</kbd></td><td>Raise or lower target speed</td></tr>
+            <tr><td><kbd>A</kbd> <kbd>D</kbd></td><td>Steer. Hold past 60% to override LMS</td></tr>
+            <tr><td><kbd>Q</kbd> <kbd>E</kbd></td><td>Left or right turn signal</td></tr>
+            <tr><td><kbd>Z</kbd> <kbd>X</kbd></td><td>Change lane left or right</td></tr>
+            <tr><td><kbd>T</kbd></td><td>Take control, or hand back to the automatic driver</td></tr>
+            <tr><td><kbd>L</kbd></td><td>Enable or disable LMS</td></tr>
+            <tr><td><kbd>F</kbd></td><td>Toggle distracted driver</td></tr>
+            <tr><td><kbd>V</kbd></td><td>Next camera view</td></tr>
+            <tr><td><kbd>Space</kbd></td><td>Pause or play</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Driving controls work in self drive. Your car follows the curve of the road and straightens out when you let go; keeping it in the lane is up to you or LMS.</p>
+      </div>
+
+      <div class="pane" id="paneFlt" role="tabpanel" aria-labelledby="tabFlt" hidden>
+        <div class="fld"><div class="row1"><label for="ctlDirt">Camera contamination</label><output id="oDirt"></output></div><input type="range" id="ctlDirt" min="0" max="100" step="1"></div>
+        <div class="toggles">
+          <button class="btn tg" id="tgCam" aria-pressed="false"><span>Camera failure</span><span>off</span></button>
+          <button class="btn tg" id="tgVse" aria-pressed="false"><span>Vehicle state sensors lost</span><span>off</span></button>
+          <button class="btn tg" id="tgLdw" aria-pressed="false"><span>LDWS module fault</span><span>off</span></button>
+          <button class="btn tg" id="tgMis" aria-pressed="false"><span>Camera and vehicle state disagree</span><span>off</span></button>
+        </div>
+        <h3 class="subh">Security checks (SRS 17)</h3>
+        <div class="toggles">
+          <button class="btn" id="injForged">Send forged steering message</button>
+          <button class="btn" id="injStale">Send stale camera frame</button>
+          <button class="btn" id="injCorrupt">Corrupt next steering command</button>
+        </div>
+        <h3 class="subh">System settings</h3>
+        <div class="fld"><div class="row1"><label for="ctlX">Out of lane notice after</label><output id="oX"></output></div><input type="range" id="ctlX" min="0.5" max="3" step="0.5"></div>
+        <div class="fld"><label for="ctlCap">Image capture interval</label>
+          <select id="ctlCap"><option value="50">50 ms</option><option value="100">100 ms</option><option value="200">200 ms</option><option value="500">500 ms</option></select></div>
+        <p class="note">Minimum image quality is 60 out of 100. Steering torque of 3 Nm or more counts as significant. LCS can steer up to 2.5 m/s² of lateral acceleration.</p>
+      </div>
+    </aside>
+  </section>
+
+  <section class="row">
+    <div class="card">
+      <header class="card-h"><h2>Decision log</h2>
+        <div class="runbar">
+          <button class="btn sm" id="btnSteerRows" aria-pressed="true">Steering rows</button>
+          <button class="btn sm" id="btnCopy">Copy CSV</button>
+        </div>
+      </header>
+      <div class="logwrap"><table class="log"><thead><tr><th>Time</th><th>Lane</th><th>Offset</th><th>Speed</th><th>LMS</th><th>Event</th></tr></thead><tbody id="logBody"></tbody></table></div>
+      <p class="note" id="copyNote">Each row records lane position, speed, LMS status and the alert, command or rejected message with its time. The CSV holds one sample per image capture.</p>
+    </div>
+    <div class="card">
+      <header class="card-h"><h2>Requirements demonstrated</h2><span class="count" id="reqCount"></span></header>
+      <ul class="reqs" id="reqs"></ul>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>window.THREE || document.write('<script src="vendor/three.min.js"><\/script>');</script>
+<script src="js/config.js"></script>
+<script src="js/road.js"></script>
+<script src="js/traffic.js"></script>
+<script src="js/lms.js"></script>
+<script src="js/sim.js"></script>
+<script src="js/scenarios.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/world3d.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+
+</body>
+</html>
